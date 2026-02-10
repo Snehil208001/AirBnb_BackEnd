@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List; // Import this
 
 @RestController
-@RequestMapping("/admin.hotels")
+@RequestMapping("/admin/hotels")
 @RequiredArgsConstructor
 @Slf4j
 public class HotelController {

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // Add this import
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ public class RoomServiceImpl implements RoomService {
 
     private final RoomRepository roomRepository;
     private final HotelRepository hotelRepository;
+    private final InventoryService inventoryService;
     private final ModelMapper modelMapper;
 
     @Override
@@ -32,9 +34,13 @@ public class RoomServiceImpl implements RoomService {
         Room room = modelMapper.map(roomDto, Room.class);
         room.setHotel(hotel);
         room = roomRepository.save(room);
+
+        if (hotel.getActive()) {
+            inventoryService.initializeRoomForAYear(room);
+        }
+
         return modelMapper.map(room,RoomDto.class);
 
-        //TODO: create inventory as soon as rrom is created and if hotel is active
     }
 
     @Override
@@ -53,21 +59,22 @@ public class RoomServiceImpl implements RoomService {
         log.info("Getting the room with ID: {}", roomId);
         Room room = roomRepository
                 .findById(roomId)
-                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with ID: "+ roomId));
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found with ID: "+ roomId));
         return modelMapper.map(room,RoomDto.class);
     }
 
     @Override
+    @Transactional // IMPORTANT: Ensures atomic operation
     public void deleteRoomById(Long roomId) {
         log.info("Deleting the room with ID: {}", roomId);
-        boolean exists = roomRepository.existsById(roomId);
-        if (!exists) {
-            throw new ResourceNotFoundException("Room not found with ID: " + roomId);
-        }
+        Room room = roomRepository
+                .findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found with ID: "+ roomId));
+
+        // 1. Delete ALL inventories first (Children)
+        inventoryService.deleteAllInventories(room);
+
+        // 2. Then delete the room (Parent)
         roomRepository.deleteById(roomId);
-
-        //TODO: delete all future inventory for this room
-
-
     }
 }
