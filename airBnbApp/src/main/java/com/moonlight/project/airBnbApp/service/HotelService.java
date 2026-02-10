@@ -1,6 +1,7 @@
 package com.moonlight.project.airBnbApp.service;
 
 import com.moonlight.project.airBnbApp.dto.HotelDto;
+import java.util.List; // Import this
 
 public interface HotelService {
 
@@ -8,10 +9,13 @@ public interface HotelService {
 
     HotelDto getHotelById(Long id);
 
-    HotelDto updateHotelById(Long id,HotelDto hotelDto);
+    // --- ADD THIS ---
+    List<HotelDto> getAllHotels();
+    // ----------------
+
+    HotelDto updateHotelById(Long id, HotelDto hotelDto);
 
     void deleteHotelById(Long id);
 
-    void  activateHotel(Long hotelId);
-
+    void activateHotel(Long hotelId);
 }

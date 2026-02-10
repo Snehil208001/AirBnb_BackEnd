@@ -1,6 +1,5 @@
 package com.moonlight.project.airBnbApp.service;
 
-
 import com.moonlight.project.airBnbApp.dto.HotelDto;
 import com.moonlight.project.airBnbApp.entity.Hotel;
 import com.moonlight.project.airBnbApp.exception.ResourceNotFoundException;
@@ -10,16 +9,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors; // Import this
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class HotelServiceImpl implements HotelService{
+public class HotelServiceImpl implements HotelService {
 
     private final HotelRepository hotelRepository;
     private final ModelMapper modelMapper;
 
     @Override
     public HotelDto createNewHotel(HotelDto hotelDto) {
+        // ... (your existing code)
         log.info("creating a new hotel with name: {}", hotelDto.getName());
         Hotel hotel = modelMapper.map(hotelDto,Hotel.class);
         hotel.setActive(false);
@@ -28,8 +31,20 @@ public class HotelServiceImpl implements HotelService{
         return modelMapper.map(hotel, HotelDto.class);
     }
 
+    // --- ADD THIS METHOD ---
+    @Override
+    public List<HotelDto> getAllHotels() {
+        log.info("Getting all hotels");
+        return hotelRepository.findAll()
+                .stream()
+                .map(hotel -> modelMapper.map(hotel, HotelDto.class))
+                .collect(Collectors.toList());
+    }
+    // -----------------------
+
     @Override
     public HotelDto getHotelById(Long id) {
+        // ... (your existing code)
         log.info("Getting the hotel with ID: {}", id);
         Hotel hotel = hotelRepository
                 .findById(id)
@@ -37,6 +52,7 @@ public class HotelServiceImpl implements HotelService{
         return modelMapper.map(hotel,HotelDto.class);
     }
 
+    // ... (keep the rest of your methods: update, delete, activate as they were)
     @Override
     public HotelDto updateHotelById(Long id, HotelDto hotelDto) {
         log.info("Updating the hotel with ID: {}", id);
@@ -58,7 +74,6 @@ public class HotelServiceImpl implements HotelService{
 
         hotelRepository.deleteById(id);
         //TODO: delete the future inventories for this hotel
-
     }
 
     @Override
