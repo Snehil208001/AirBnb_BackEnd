@@ -41,6 +41,11 @@ public class BookingServiceImpl implements BookingService{
         Hotel hotel = hotelRepository.findById(bookingRequest.getHotelId()).orElseThrow(() ->
                 new ResourceNotFoundException("Hotel not found with id: " + bookingRequest.getHotelId()));
 
+        // FIX: Prevent booking if hotel is not active
+        if (!hotel.getActive()) {
+            throw new IllegalStateException("Hotel is currently inactive and cannot be booked.");
+        }
+
         Room room = roomRepository.findById(bookingRequest.getRoomId()).orElseThrow(() ->
                 new ResourceNotFoundException("Room not found with id: " + bookingRequest.getRoomId()));
 
@@ -121,6 +126,6 @@ public class BookingServiceImpl implements BookingService{
     }
 
     public boolean hasBookingExpired(Booking booking) {
-         return booking.getCreatedAt().plusMinutes(10).isBefore(LocalDateTime.now());
+        return booking.getCreatedAt().plusMinutes(10).isBefore(LocalDateTime.now());
     }
 }

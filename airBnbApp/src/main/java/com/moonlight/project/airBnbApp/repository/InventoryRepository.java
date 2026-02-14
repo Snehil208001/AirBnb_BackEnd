@@ -27,6 +27,7 @@ public interface InventoryRepository extends JpaRepository<Inventory,Long> {
                 AND i.date BETWEEN :startDate AND :endDate
                 AND i.closed = false
                 AND (i.totalCount - i.bookedCount - i.reservedCount) >= :roomsCount
+                AND i.hotel.active = true
             GROUP BY i.hotel, i.room
             HAVING COUNT(i.date) = :dateCount
             """)

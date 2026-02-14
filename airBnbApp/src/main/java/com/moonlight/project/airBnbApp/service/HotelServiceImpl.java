@@ -92,9 +92,10 @@ public class HotelServiceImpl implements HotelService {
 
         hotel.setActive(true);
 
-        // FIX: Removed the loop that creates inventory here.
-        // Inventory is now created immediately when a room is added in RoomServiceImpl.
-        // This prevents creating duplicate inventory records.
+        // FIX: Explicitly save the hotel to ensure the DB update happens
+        hotelRepository.save(hotel);
+
+        // Inventory is already created in RoomServiceImpl, so we don't need to loop here.
     }
 
     @Override
