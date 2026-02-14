@@ -1,6 +1,5 @@
 package com.moonlight.project.airBnbApp.advice;
 
-
 import com.moonlight.project.airBnbApp.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +18,18 @@ public class GlobalExceptionHandler {
         return buildErrorResponseEntity(apiError);
     }
 
+    // NEW: Handle generic exceptions correctly
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<?>> buildErrorResponseEntity(ApiError apiError) {
-        return new ResponseEntity<>(new ApiResponse<>(apiError),apiError.getStatus());
+    public ResponseEntity<ApiResponse<?>> handleInternalServerError(Exception exception) {
+        ApiError apiError = ApiError.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .message(exception.getMessage()) // Or use a generic message like "An unexpected error occurred"
+                .build();
+        return buildErrorResponseEntity(apiError);
+    }
+
+    // FIXED: Removed @ExceptionHandler. This is now just a helper method.
+    private ResponseEntity<ApiResponse<?>> buildErrorResponseEntity(ApiError apiError) {
+        return new ResponseEntity<>(new ApiResponse<>(apiError), apiError.getStatus());
     }
 }

@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Add this import
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,12 +35,10 @@ public class RoomServiceImpl implements RoomService {
         room.setHotel(hotel);
         room = roomRepository.save(room);
 
-        if (hotel.getActive()) {
-            inventoryService.initializeRoomForAYear(room);
-        }
+        // FIX: Always initialize inventory, regardless of whether the hotel is active or not
+        inventoryService.initializeRoomForAYear(room);
 
         return modelMapper.map(room,RoomDto.class);
-
     }
 
     @Override
@@ -64,7 +62,7 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
-    @Transactional // IMPORTANT: Ensures atomic operation
+    @Transactional
     public void deleteRoomById(Long roomId) {
         log.info("Deleting the room with ID: {}", roomId);
         Room room = roomRepository

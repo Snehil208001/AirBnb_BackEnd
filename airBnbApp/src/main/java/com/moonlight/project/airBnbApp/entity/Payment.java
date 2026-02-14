@@ -4,8 +4,11 @@ import com.moonlight.project.airBnbApp.entity.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CurrentTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -25,4 +28,14 @@ public class Payment {
 
     @Column(nullable = false,precision = 10,scale = 2)
     private BigDecimal amount;
+
+    @CurrentTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id") // Owning side
+    private Booking booking;
 }

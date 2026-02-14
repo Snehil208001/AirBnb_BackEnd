@@ -1,6 +1,8 @@
 package com.moonlight.project.airBnbApp.service;
 
 import com.moonlight.project.airBnbApp.dto.HotelDto;
+import com.moonlight.project.airBnbApp.dto.HotelInfoDto;
+import com.moonlight.project.airBnbApp.dto.RoomDto;
 import com.moonlight.project.airBnbApp.entity.Hotel;
 import com.moonlight.project.airBnbApp.entity.Room;
 import com.moonlight.project.airBnbApp.exception.ResourceNotFoundException;
@@ -12,7 +14,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors; // Import this
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -25,7 +27,6 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     public HotelDto createNewHotel(HotelDto hotelDto) {
-        // ... (your existing code)
         log.info("creating a new hotel with name: {}", hotelDto.getName());
         Hotel hotel = modelMapper.map(hotelDto,Hotel.class);
         hotel.setActive(false);
@@ -34,7 +35,6 @@ public class HotelServiceImpl implements HotelService {
         return modelMapper.map(hotel, HotelDto.class);
     }
 
-    // --- ADD THIS METHOD ---
     @Override
     public List<HotelDto> getAllHotels() {
         log.info("Getting all hotels");
@@ -43,11 +43,9 @@ public class HotelServiceImpl implements HotelService {
                 .map(hotel -> modelMapper.map(hotel, HotelDto.class))
                 .collect(Collectors.toList());
     }
-    // -----------------------
 
     @Override
     public HotelDto getHotelById(Long id) {
-        // ... (your existing code)
         log.info("Getting the hotel with ID: {}", id);
         Hotel hotel = hotelRepository
                 .findById(id)
@@ -55,7 +53,6 @@ public class HotelServiceImpl implements HotelService {
         return modelMapper.map(hotel,HotelDto.class);
     }
 
-    // ... (keep the rest of your methods: update, delete, activate as they were)
     @Override
     public HotelDto updateHotelById(Long id, HotelDto hotelDto) {
         log.info("Updating the hotel with ID: {}", id);
@@ -77,10 +74,12 @@ public class HotelServiceImpl implements HotelService {
                 .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with ID: "+ id));
 
-        hotelRepository.deleteById(id);
+        // FIX: Must delete inventory (children) BEFORE deleting the hotel (parent)
         for (Room room: hotel.getRooms()) {
             inventoryService.deleteFutureInventories(room);
         }
+
+        hotelRepository.deleteById(id);
     }
 
     @Override
@@ -93,9 +92,21 @@ public class HotelServiceImpl implements HotelService {
 
         hotel.setActive(true);
 
-        //assuming only do it once
-        for (Room room: hotel.getRooms()) {
-            inventoryService.initializeRoomForAYear(room);
-        }
+        // FIX: Removed the loop that creates inventory here.
+        // Inventory is now created immediately when a room is added in RoomServiceImpl.
+        // This prevents creating duplicate inventory records.
+    }
+
+    @Override
+    public HotelInfoDto getHotelInfoById(Long hotelId) {
+        Hotel hotel = hotelRepository
+                .findById(hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel not found with ID: "+ hotelId));
+        List<RoomDto> room = hotel.getRooms()
+                .stream()
+                .map((element) -> modelMapper.map(element,RoomDto.class))
+                .toList();
+
+        return new HotelInfoDto(modelMapper.map(hotel,HotelDto.class),room);
     }
 }
